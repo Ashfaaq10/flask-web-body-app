@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Upload or Take a Photo</title>
+</head>
+<body>
+  <h1>Upload or Take a Photo</h1>
+  <form id="uploadForm" enctype="multipart/form-data">
+    <label for="fileInput">Choose a file or take a photo:</label>
+    <input type="file" id="fileInput" accept="image/*" capture="camera" />
+    <button type="button" onclick="uploadFile()">Upload</button>
+  </form>
+  <div id="message"></div>
+
+  <script>
+    async function uploadFile() {
+      const fileInput = document.getElementById('fileInput');
+      const file = fileInput.files[0];
+      if (!file) {
+        console.error('No file selected.');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('photo', file);
+
+      try {
+        const response = await fetch('http://127.0.0.1:5000/upload', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to upload file.');
+        }
+
+        const data = await response.json();
+        console.log('Response from server:', data);
+
+        // Display dimensions message on the frontend
+        const messageElement = document.getElementById('message');
+        messageElement.innerHTML = "<h2>Predicted Measurements:</h2>";
+        const measurementsList = document.createElement('ul');
+        
+        for (const [key, value] of Object.entries(data)) {
+          const listItem = document.createElement('li');
+          listItem.textContent = `${key}: ${value.toFixed(2)} cm`;
+          measurementsList.appendChild(listItem);
+        }
+        
+        messageElement.appendChild(measurementsList);
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+  </script>
+</body>
+</html>
